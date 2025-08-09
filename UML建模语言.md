@@ -204,6 +204,102 @@ public class TextField extends Component {
   - 接口定义了类的行为规范
   - 支持多重继承的效果
 - **代码体现**：通过implements关键字实现
+
+#### 基础例子：线程实现
+一个类实现`Runnable`接口来定义一个可以在线程中运行的任务。
+```java
+// 基础实现示例 - 实现Runnable接口
+public class Task implements Runnable {
+    private String taskName;
+
+    public Task(String name) {
+        this.taskName = name;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Executing task: " + taskName);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Task " + taskName + " finished.");
+    }
+}
+
+// 使用
+public class Main {
+    public static void main(String[] args) {
+        Thread thread1 = new Thread(new Task("Download File"));
+        Thread thread2 = new Thread(new Task("Process Data"));
+        thread1.start();
+        thread2.start();
+    }
+}
+```
+
+#### 进阶例子：自定义数据源切换
+通过实现数据访问接口，可以灵活地切换数据源，例如从数据库切换到文件系统或云存储。
+```java
+// 进阶实现示例 - 数据访问策略
+// 1. 定义数据访问接口 (契约)
+public interface DataRepository {
+    String getData(String id);
+    void saveData(String id, String data);
+}
+
+// 2. 实现数据库版本
+public class DatabaseRepository implements DataRepository {
+    @Override
+    public String getData(String id) {
+        System.out.println("Fetching data for id '" + id + "' from database.");
+        // ... 数据库查询逻辑 ...
+        return "Data from DB";
+    }
+
+    @Override
+    public void saveData(String id, String data) {
+        System.out.println("Saving data for id '" + id + "' to database.");
+        // ... 数据库写入逻辑 ...
+    }
+}
+
+// 3. 实现文件系统版本
+public class FileRepository implements DataRepository {
+    @Override
+    public String getData(String id) {
+        System.out.println("Reading data for id '" + id + "' from file.");
+        // ... 文件读取逻辑 ...
+        return "Data from File";
+    }
+
+    @Override
+    public void saveData(String id, String data) {
+        System.out.println("Writing data for id '" + id + "' to file.");
+        // ... 文件写入逻辑 ...
+    }
+}
+
+// 4. 使用服务的类，它不关心具体实现
+public class DataService {
+    private DataRepository repository;
+
+    // 通过构造函数注入具体实现
+    public DataService(DataRepository repository) {
+        this.repository = repository;
+    }
+
+    public String fetchData(String id) {
+        return repository.getData(id);
+    }
+
+    public void storeData(String id, String data) {
+        repository.saveData(id, data);
+    }
+}
+```
+
 - **实际示例**：
   - ArrayList实现List接口
   - FileWriter实现Writer接口
@@ -226,6 +322,60 @@ public class TextField extends Component {
   - 局部变量：`LocalClass local = new LocalClass()`
   - 方法返回值：`public ReturnClass getObject()`
   - 静态方法调用：`UtilClass.staticMethod()`
+#### 基础例子：司机驾驶汽车
+司机(Driver)类的方法`drive`依赖于汽车(Car)类。这种依赖是临时的，因为司机只有在“驾驶”这个动作发生时才需要汽车。
+```java
+// 基础依赖示例
+public class Car {
+    public void move() {
+        System.out.println("Car is moving.");
+    }
+}
+
+public class Driver {
+    // drive方法依赖于Car类作为参数
+    public void drive(Car car) {
+        System.out.println("Driver starts driving.");
+        car.move();
+    }
+}
+
+// 使用
+public class Main {
+    public static void main(String[] args) {
+        Driver driver = new Driver();
+        Car car = new Car();
+        driver.drive(car); // 依赖关系在此方法调用期间存在
+    }
+}
+```
+
+#### 进阶例子：报告生成器
+一个报告生成器(ReportGenerator)依赖多个其他类来完成其工作，但这些依赖都体现在方法内部或作为方法参数，而不是类的属性。
+```java
+// 进阶依赖示例
+public class ReportGenerator {
+    // generate方法依赖多个类
+    public Report generate(ReportData data) {
+        // 1. 依赖格式化器 (局部变量)
+        Formatter formatter = new Formatter();
+        String formattedContent = formatter.format(data);
+
+        // 2. 依赖PDF导出工具 (静态方法调用)
+        PdfExporter.export(formattedContent);
+
+        System.out.println("Report generated and exported.");
+        return new Report(); // 3. 依赖Report类作为返回值
+    }
+}
+
+// 被依赖的类
+class ReportData { /* ... */ }
+class Formatter { public String format(ReportData data) { return "Formatted data"; } }
+class PdfExporter { public static void export(String content) { /* ... */ } }
+class Report { /* ... */ }
+```
+
 - **实际示例**：
   - Controller依赖Service（通过方法参数）
   - 工具类的使用（通过静态方法调用）
@@ -250,6 +400,68 @@ public class TextField extends Component {
   - 1对1：一个对象关联一个对象
   - 1对多：一个对象关联多个对象
   - 多对多：多个对象关联多个对象
+#### 基础例子：学生和课程 (多对多)
+一个学生可以选择多门课程，一门课程也可以被多个学生选择。这是典型的多对多关联。
+```java
+// 基础关联示例 - 多对多
+import java.util.ArrayList;
+import java.util.List;
+
+public class Student {
+    private String name;
+    private List<Course> courses = new ArrayList<>();
+
+    public void addCourse(Course course) {
+        courses.add(course);
+    }
+}
+
+public class Course {
+    private String courseName;
+    private List<Student> students = new ArrayList<>();
+
+    public void addStudent(Student student) {
+        students.add(student);
+    }
+}
+```
+
+#### 进阶例子：订单和客户 (一对多)
+一个客户可以有多个订单，但一个订单只属于一个客户。这是一种一对多关联，并且是单向的（从Order到Customer）。
+```java
+// 进阶关联示例 - 一对多
+import java.util.List;
+
+public class Customer {
+    private String customerId;
+    private String name;
+    // Customer类不一定需要知道它的所有订单，所以可以没有List<Order>
+}
+
+public class Order {
+    private String orderId;
+    private List<OrderLine> orderLines;
+    
+    // Order类持有对Customer的引用，表示关联关系
+    private Customer customer; 
+
+    public Order(Customer customer) {
+        this.customer = customer;
+    }
+}
+
+// OrderLine和Product之间也是关联
+public class OrderLine {
+    private int quantity;
+    private Product product; // 关联到Product
+}
+
+public class Product {
+    private String productId;
+    private double price;
+}
+```
+
 - **实际示例**：
   - Person有Address（人有地址）
   - Order有Customer（订单有客户）
@@ -303,6 +515,93 @@ public class TextField extends Component {
 - **代码特征**：
   - 通常通过构造函数参数或setter方法设置
   - 部分对象通常在整体外部创建
+#### 基础例子：团队和球员
+一个球队(Team)由多个球员(Player)组成。球员是球队的一部分，但球员可以独立存在，比如成为自由球员或转会到其他球队。球队解散，球员依然存在。
+```java
+// 基础聚合示例
+import java.util.ArrayList;
+import java.util.List;
+
+public class Player {
+    private String name;
+    public Player(String name) { this.name = name; }
+    public String getName() { return name; }
+}
+
+public class Team {
+    private String teamName;
+    private List<Player> players = new ArrayList<>();
+
+    // 球员对象从外部传入，而不是在Team内部创建
+    public void addPlayer(Player player) {
+        players.add(player);
+    }
+}
+
+// 使用
+public class Main {
+    public static void main(String[] args) {
+        Player player1 = new Player("Alice");
+        Player player2 = new Player("Bob");
+
+        Team team = new Team();
+        team.addPlayer(player1);
+        team.addPlayer(player2);
+
+        // team对象被销毁后，player1和player2对象依然存在
+    }
+}
+```
+
+#### 进阶例子：音乐播放列表和歌曲
+一个音乐播放列表(Playlist)包含多首歌曲(Song)。同一首歌曲可以被添加到多个不同的播放列表。删除一个播放列表不会删除歌曲本身。
+```java
+// 进阶聚合示例
+import java.util.List;
+import java.util.ArrayList;
+
+public class Song {
+    private String title;
+    private String artist;
+    public Song(String title, String artist) { /* ... */ }
+}
+
+public class Playlist {
+    private String name;
+    private List<Song> songs = new ArrayList<>();
+
+    public void addSong(Song song) {
+        // 只是添加引用，不负责Song的生命周期
+        songs.add(song);
+    }
+}
+
+public class MusicLibrary {
+    private List<Song> allSongs = new ArrayList<>();
+    private List<Playlist> allPlaylists = new ArrayList<>();
+
+    public static void main(String[] args) {
+        MusicLibrary library = new MusicLibrary();
+        Song song1 = new Song("Bohemian Rhapsody", "Queen");
+        Song song2 = new Song("Stairway to Heaven", "Led Zeppelin");
+        library.allSongs.add(song1);
+        library.allSongs.add(song2);
+
+        Playlist rockClassics = new Playlist();
+        rockClassics.addSong(song1);
+        rockClassics.addSong(song2);
+
+        Playlist myFavorites = new Playlist();
+        myFavorites.addSong(song1); // 同一首歌song1在多个播放列表中
+
+        library.allPlaylists.add(rockClassics);
+        library.allPlaylists.add(myFavorites);
+
+        // 如果删除rockClassics播放列表，song1和song2依然存在于library和myFavorites中
+    }
+}
+```
+
 - **实际示例**：
   - Department聚合Employee（部门包含员工，员工可以转部门）
   - Team聚合Player（团队包含球员，球员可以转队）
@@ -327,6 +626,81 @@ public class TextField extends Component {
 - **代码特征**：
   - 部分对象通常在整体内部创建
   - 整体负责部分的创建和销毁
+#### 基础例子：汽车和引擎
+一辆汽车(Car)由一个引擎(Engine)组成。引擎是汽车的核心部分，它不能独立于汽车存在。如果汽车报废，引擎也随之报废。
+```java
+// 基础组合示例
+public class Engine {
+    public void start() {
+        System.out.println("Engine started.");
+    }
+}
+
+public class Car {
+    // Engine对象在Car的构造函数中创建，由Car负责其生命周期
+    private Engine engine = new Engine();
+
+    public void start() {
+        System.out.println("Car is starting.");
+        engine.start();
+    }
+}
+
+// 使用
+public class Main {
+    public static void main(String[] args) {
+        Car myCar = new Car();
+        myCar.start();
+        // 当myCar对象被垃圾回收时，它内部的engine对象也会被回收
+    }
+}
+```
+
+#### 进阶例子：订单和订单项
+一个订单(Order)由多个订单项(OrderLine)组成。每个订单项代表购买的某个商品及其数量。订单项不能脱离订单存在，如果订单被取消或删除，其所有的订单项也随之失效。
+```java
+// 进阶组合示例
+import java.util.ArrayList;
+import java.util.List;
+
+public class OrderLine {
+    private String productId;
+    private int quantity;
+    private double price;
+
+    public OrderLine(String productId, int quantity, double price) {
+        this.productId = productId;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
+    public double getSubtotal() {
+        return quantity * price;
+    }
+}
+
+public class Order {
+    private String orderId;
+    // OrderLine对象在Order内部管理，外部无法直接创建或删除
+    private List<OrderLine> lines = new ArrayList<>();
+
+    public Order(String orderId) {
+        this.orderId = orderId;
+    }
+
+    // OrderLine的创建由Order控制
+    public void addProduct(String productId, int quantity, double price) {
+        lines.add(new OrderLine(productId, quantity, price));
+    }
+
+    public double getTotal() {
+        return lines.stream().mapToDouble(OrderLine::getSubtotal).sum();
+    }
+}
+
+// 当一个Order对象被销毁时，它包含的OrderLine列表及所有OrderLine对象都将一并被销毁
+```
+
 - **实际示例**：
   - House组合Room（房子包含房间，房子拆除房间也消失）
   - Car组合Engine（汽车包含引擎，汽车报废引擎也报废）
@@ -401,24 +775,68 @@ public class TextField extends Component {
 
 ### 2.3 示例
 
+#### 基础例子：ATM机
+- **参与者**: 顾客 (Customer)
+- **用例**:
+  - 取款 (Withdraw Cash)
+  - 查询余额 (Check Balance)
+  - 存款 (Deposit Funds)
+- **关系**: 顾客与这三个用例都有关联关系。
+
 ```
-      ┌──────────────────────────────────┐
-      │              在线购物系统            │
-      │                                  │
-      │   (检查库存) <.. <<include>> .... (下订单) │
-      │      ^                           │
-      │      | <<extend>>                │
-      │   (查询促销信息)                      │
-      │                                  │
-      └──────────────────────────────────┘
-         ^                                 ^
-         |                                 |
-  웃      |                                 |      웃
-(顾客) ───┘                                 └──── (管理员)
-                                                   △
-                                                   |
-                                                  웃
-                                                (超级管理员)
+      ┌──────────────────┐
+      │       ATM系统      │
+      │                  │
+      │    (取款)        │
+      │    (查询余额)      │
+      │    (存款)        │
+      │                  │
+      └──────────────────┘
+         ^    ^    ^
+         |    |    |
+         └─── | ───┘
+              |
+             웃
+           (顾客)
+```
+
+#### 进阶例子：在线购物系统
+- **参与者**:
+  - 顾客 (Customer)
+  - 管理员 (Admin) (泛化自`系统用户`)
+  - 支付网关 (Payment Gateway) (外部系统)
+- **用例**:
+  - **基础用例**: 登录 (Login), 下订单 (Place Order), 管理商品 (Manage Products)
+  - **包含用例**: 验证用户 (Authenticate User) - 被`下订单`和`管理商品`用例包含。
+  - **扩展用例**: 使用优惠券 (Apply Coupon) - 扩展`下订单`用例。
+- **关系**:
+  - 顾客关联到`登录`和`下订单`。
+  - 管理员关联到`登录`和`管理商品`。
+  - `下订单`用例包含`验证用户`用例。
+  - `使用优惠券`用例扩展`下订单`用例。
+  - `下订单`用例与`支付网关`参与者交互。
+
+```
+      ┌──────────────────────────────────────────┐
+      │                  在线购物系统                │
+      │                                          │
+      │ (验证用户) <.. <<include>> .. (下订单)        │
+      │      ^                           |         │
+      │      | <<include>>               |         │
+      │ (管理商品)                       | <<extend>>.. (使用优惠券) │
+      │                                          │
+      └──────────────────────────────────────────┘
+         ^   ^                               ^
+         |   |                               |
+  웃      |   └───────────────────────────────┤      웃
+(管理员) ───┘                                   └──── (顾客)
+   △                                               │
+   |                                               │
+  웃                                                │
+(系统用户)                                           │
+                                                   │
+                                                   V
+                                                  [支付网关]
 ```
 
 ## 4. 时序图 (Sequence Diagram)
@@ -537,6 +955,80 @@ public class TextField extends Component {
   └─── end par ────────────┘
   ```
 
+### 2.5 示例
+
+#### 基础例子：用户登录
+展示用户输入用户名和密码后，系统进行验证的简单交互过程。
+```
+:User   :LoginPage   :AuthService   :Database
+  │        │              │             │
+  │ enterCredentials()   │              │
+  ├───────>│              │             │
+  │        │ login(user, pass) │             │
+  │        ├─────────────>│             │
+  │        │              │ findUser(user) │
+  │        │              ├────────────>│
+  │        │              │             │ user data
+  │        │              │<────────────┤
+  │        │              │             │
+  │        │              │ validatePassword() │
+  │        │              ├─┐           │
+  │        │              │ │           │
+  │        │              │<┘           │
+  │        │              │             │
+  │        │              │ login success │
+  │        │<─────────────┤             │
+  │        │              │             │
+  │ showSuccess() │              │             │
+  │<───────┤              │             │
+  │        │              │             │
+```
+
+#### 进阶例子：在线下单
+展示一个更复杂的交互，包括库存检查、支付和通知，并使用`alt`和`par`交互片段。
+```
+:Customer   :OrderService   :InventorySvc   :PaymentGateway   :NotificationSvc
+    │            │                │                │                 │
+    │ placeOrder() │                │                │                 │
+    ├───────────>│                │                │                 │
+    │            │                │                │                 │
+    ┌─── par ─────────────────────────────────────────────────────────┐
+    │   │ checkStock()     │                │                 │       │
+    │   ├───────────────>│                │                 │       │
+    │   │                │ stock available│                 │       │
+    │   │<───────────────┤                │                 │       │
+    ├─────────────────────────────────────────────────────────────────┤
+    │   │ processPayment() │                │                 │       │
+    │   ├────────────────────────────────>│                 │       │
+    │   │                │                │ payment success │       │
+    │   │<────────────────────────────────┤                 │       │
+    └─── end par ─────────────────────────────────────────────────────┘
+    │            │                │                │                 │
+    ┌─── alt ─────────────────────────────────────────────────────────┐
+    │ [payment successful and stock available]                        │
+    │   │ createOrder()    │                │                 │       │
+    │   ├─┐              │                │                 │       │
+    │   │ │              │                │                 │       │
+    │   │<┘              │                │                 │       │
+    │   │                │                │                 │       │
+    │   │ sendConfirmation() │                 │       │
+    │   ├──────────────────────────────────────────────────>│       │
+    │   │                │                │                 │       │
+    │   │ order success  │                │                 │       │
+    │<──┤                │                │                 │       │
+    ├─────────────────────────────────────────────────────────────────┤
+    │ [else]                                                          │
+    │   │ cancelOrder()    │                │                 │       │
+    │   ├─┐              │                │                 │       │
+    │   │ │              │                │                 │       │
+    │   │<┘              │                │                 │       │
+    │   │                │                │                 │       │
+    │   │ order failed   │                │                 │       │
+    │<──┤                │                │                 │       │
+    └─── end alt ────────────────────────────────────────────────────┘
+    │            │                │                │                 │
+```
+
 ## 5. 通信图 (Communication Diagram)
 
 在UML 2.x中，协作图被重新命名为**通信图**。它与时序图等价，可以相互转换，但它更侧重于对象之间的静态连接关系，而不是消息的时间顺序。
@@ -618,6 +1110,37 @@ public class TextField extends Component {
 - 复合状态可以被虚线分割成多个并发区域，每个区域都有自己的子状态机，它们同时处于活动状态。
 - **示例**: 电视机可以同时处于"显示画面"和"播放声音"两个并发状态。
 
+### 4.4 示例
+
+#### 基础例子：电灯开关
+一个简单的状态机，只有两个状态：开和关。
+```
+      turnOn
+   ● ────────> ┌──────┐
+               │  On  │
+   ┌──────┐ <──────── ┘
+   │ Off  │    turnOff
+   └──────┘
+```
+
+#### 进阶例子：文章发布流程
+描述一篇文章从草稿到发布、归档的完整生命周期，包含复合状态和条件转换。
+```
+                                     publish [approved]
+● ──> ┌────────┐ ── submit ──> ┌──────────────────┐ ───────────> ┌─────────┐ ── archive ──> ◉
+      │ Draft  │              │     In Review      │               │Published│
+      └────────┘ <─ reject ─── ├──────────────────┤ <─ edit ───── └─────────┘
+               <─ send back ── │ entry / notify() │
+                               │ do / checkGrammar  │
+                               │ exit / logResult   │
+                               └──────────────────┘
+```
+- **状态**: Draft, In Review, Published.
+- **特殊状态**: 初始状态(●), 终止状态(◉).
+- **事件**: submit, reject, send back, publish, edit, archive.
+- **守护条件**: `[approved]` - 只有文章被批准时才能发布。
+- **内部活动**: `In Review`状态有进入、执行和退出动作。
+
 ## 7. 活动图 (Activity Diagram)
 
 活动图是一种特殊的**状态机图**，其中所有或大多数状态都是活动状态，所有或大多数转换都在源状态中的活动完成后自动触发。它非常适合用于描述业务流程或计算工作流。
@@ -653,6 +1176,61 @@ public class TextField extends Component {
 ### 5.4 异常处理 (Exception Handling)
 - 活动图可以模拟异常处理流程。
 - **异常处理器 (Exception Handler)**: `⚡` 从受保护的活动区域指向异常处理活动。
+
+### 5.5 示例
+
+#### 基础例子：用户登录流程
+一个简单的线性活动流程，带有决策点。
+```
+● ──> [输入用户名密码] ──> ◇ ── [验证成功] ──> [进入系统] ──> ◉
+                            │
+                            └─ [验证失败] ──> [显示错误信息] ──> ●
+```
+- **初始节点**: ●
+- **活动**: 输入用户名密码, 进入系统, 显示错误信息
+- **决策节点**: ◇ (菱形)
+- **最终节点**: ◉
+
+#### 进阶例子：处理订单（带泳道和并行活动）
+一个更复杂的业务流程，使用泳道来区分不同角色的职责，并使用分叉/汇合来表示并行处理。
+```
+┌───────────┬────────────────────────────────┬──────────────┐
+│  Customer │          Order System          │   Warehouse  │
+├───────────┼────────────────────────────────┼──────────────┤
+│     ●     │                                │              │
+│     │     │                                │              │
+│     V     │                                │              │
+│ [下订单]  │                                │              │
+│     │     │                                │              │
+│     V     │                                │              │
+│    ───    │                                │              │
+│     │─────> [接收订单]                       │              │
+│           │     │                          │              │
+│           │     V                          │              │
+│           │    ─── (分叉)                    │              │
+│           │   /   \                        │              │
+│           │  /     \                       │              │
+│           │ V       V                      │              │
+│      [处理支付]  [发送订单到仓库] ───────────> [准备发货]   │
+│           │       │                        │     │        │
+│           │       │                        │     V        │
+│           │       │                        │  [打包商品]  │
+│           │       │                        │     │        │
+│           │       │                        │     V        │
+│           │       └──────────────────────────< [通知已发货] │
+│           │       │                              │        │
+│           │       V                              │        │
+│           │    ─── (汇合)                          │        │
+│           │     │                              │        │
+│           │     V                              │        │
+│      [关闭订单] ─────────────────────────────────┘        │
+│           │                                │              │
+│           V                                │              │
+│           ◉                                │              │
+└───────────┴────────────────────────────────┴──────────────┘
+```
+- **泳道**: Customer, Order System, Warehouse.
+- **并行处理**: `处理支付`和`发送订单到仓库`是并行执行的。
 
 ## 8. 其他UML图详解
 
